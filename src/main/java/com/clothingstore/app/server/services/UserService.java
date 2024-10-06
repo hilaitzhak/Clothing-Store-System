@@ -1,5 +1,6 @@
 package com.clothingstore.app.server.services;
 
+import com.clothingstore.app.server.models.Product;
 import com.clothingstore.app.server.models.User;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,8 +30,15 @@ public class UserService {
         users = objectMapper.readValue(file, new TypeReference<List<User>>() {});
     }
 
-    public List<User> getUsers() {
-        return users;
+    // Get all users with a specific branch
+    public List<User> getUsersByBranchId(String branchId) {
+        List<User> relevantUsers = new ArrayList<>();
+        for (User user : users) {
+            if (user.getBranchId().equals(branchId)) {
+            relevantUsers.add(user);
+            }
+        }
+        return relevantUsers;
     }
 
     // New login method to check credentials

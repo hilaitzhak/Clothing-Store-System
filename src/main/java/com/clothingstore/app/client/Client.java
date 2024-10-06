@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.clothingstore.app.server.models.Customer;
 import com.clothingstore.app.server.models.Product;
+import com.clothingstore.app.server.models.User;
 
 public class Client {
     // ANSI escape codes for colors
@@ -146,8 +147,55 @@ public class Client {
         }
     }
     
+    private static void handleEmployeesManagement(Scanner scanner) {
+        try {
+            URL url = new URL("http://localhost:3333/users?branchId=" + userBranchId);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
 
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                Scanner responseScanner = new Scanner(connection.getInputStream());
+                StringBuilder response = new StringBuilder();
+                while (responseScanner.hasNextLine()) {
+                    response.append(responseScanner.nextLine());
+                }
+                responseScanner.close();
 
+                // Parse the JSON response into a List of Customer objects
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<User> employees = objectMapper.readValue(response.toString(), new TypeReference<List<User>>() {});
+
+                // Display customer details in a table format
+                printEmployeesTable(employees);
+
+            } else {
+                System.out.println(RED + "Failed to fetch employee details. Server returned error code: " + responseCode + RESET);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(RED + "Error occurred while fetching employee details." + RESET);
+        }
+    }
+
+    private static void printEmployeesTable(List<User> employees) {
+        // Print table headers
+        System.out.printf(CYAN + "%-15s %-20s %-15s %-20s %-15s %-10s %-25s\n" + RESET, 
+                        "Employee ID", "Full Name", "Account Number", "Employee Number", "Role", "BranchId", "PhoneNumber");
+        System.out.println(CYAN + "------------------------------------------------------------------------------------------" + RESET);
+
+        // Print each customer in a row
+        for (User employee : employees) {
+            System.out.printf("%-15s %-20s %-15s %-20s %-15s %-10s %-25s\n", 
+            employee.getUserId(), 
+            employee.getFullName(), 
+            employee.getAccountNumber(), 
+            employee.getEmployeeNumber(),
+            employee.getRole(),
+            employee.getBranchId(),
+            employee.getPhoneNumber()); 
+        }
+    }
    
     private static void handleCustomerManagement(Scanner scanner) {
         try {
@@ -196,8 +244,7 @@ public class Client {
                             customer.getCustomerType());
         }
     }
-    
-    // Fetch and display products
+
        // Fetch and display products
        private static void handleProductManagement(Scanner scanner) {
         try {
@@ -219,7 +266,6 @@ public class Client {
                 // Parse the JSON response into a List of Product objects
                 ObjectMapper objectMapper = new ObjectMapper();
                 List<Product> products = objectMapper.readValue(response.toString(), new TypeReference<List<Product>>() {});
-                System.out.println("products: " + products);
                 // Display product details in a table format
                 printProductTable(products);
 
@@ -348,7 +394,7 @@ public class Client {
                     // Implement sales reports
                     break;
                 case 4:
-                    // Implement employee management
+                    handleEmployeesManagement(scanner);
                     break;
                 case 5:
                     // Implement chat system

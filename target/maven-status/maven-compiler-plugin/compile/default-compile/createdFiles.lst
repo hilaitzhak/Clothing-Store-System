@@ -15,6 +15,7 @@ com\clothingstore\app\server\controllers\ProductController.class
 com\clothingstore\app\server\Main.class
 com\clothingstore\app\server\models\Product.class
 com\clothingstore\app\server\services\CustomerService$1.class
+com\clothingstore\app\client\Client$4.class
 com\clothingstore\app\server\models\User.class
 com\clothingstore\app\server\services\CustomerService$2.class
 com\clothingstore\app\server\services\ProductService$1.class

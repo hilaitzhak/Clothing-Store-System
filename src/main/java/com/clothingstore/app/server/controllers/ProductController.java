@@ -26,7 +26,6 @@ public class ProductController {
         if (branchId == null || branchId.isEmpty()) {
             throw new IllegalArgumentException("Branch ID must not be null or empty");
         }
-        System.out.println("Fetching products for branchId: " + branchId);
         return productService.getProductsByBranch(branchId);
     }
 
