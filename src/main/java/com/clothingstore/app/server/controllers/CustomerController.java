@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/customers")
@@ -14,7 +15,7 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    @GetMapping
+    @GetMapping("/all")
     public List<Customer> getAllCustomers() {
         return customerService.getAllCustomers();
     }
@@ -25,8 +26,10 @@ public class CustomerController {
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
     }
 
-    @PostMapping("/{customerId}/purchase")
-    public String initiatePurchase(@PathVariable String customerId) {
-        return customerService.handlePurchase(customerId);
+    @GetMapping("/{customerId}/details")
+    public Map<String, Object> getCustomerDetails(@PathVariable String customerId) {
+        return customerService.getCustomerDetailsMessage(customerId);
     }
+
+    
 }

@@ -6,7 +6,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -118,35 +117,40 @@ public class Client {
     
     private static boolean fetchUserDetails(String username) {
         try {
-            // Load users from the JSON file
-            ObjectMapper objectMapper = new ObjectMapper();
-            List<Map<String, String>> users = objectMapper.readValue(
-                    new File("src/main/java/com/clothingstore/app/server/data/users.json"),
-                    new TypeReference<List<Map<String, String>>>() {}
-            );
+            // Send a GET request to the server to fetch user details by username
+            URL url = new URL("http://localhost:3333/users/" + username + "/details");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
     
-            // Search for the user in the list
-            for (Map<String, String> user : users) {
-                if (user.get("username").equals(username)) {
-                    String fullName = user.get("fullName");
-                    String role = user.get("role");
-                    userBranchId = user.get("branchId");
-                    System.out.println(GREEN + "Welcome " + fullName + ", you are logged in as a " + role + "." + RESET);
-                    return true;
-                }
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                // Read the response from the server
+                @SuppressWarnings("resource")
+                String response = new BufferedReader(new InputStreamReader(connection.getInputStream()))
+                        .lines().collect(Collectors.joining("\n"));
+    
+                // Parse the response into a Map<String, Object>
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> userDetails = objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {});
+    
+                // Print user details (e.g., full name and role)
+                String fullName = (String) userDetails.get("fullName");
+                String role = (String) userDetails.get("role");
+                userBranchId = (String) userDetails.get("branchId");
+                System.out.println(GREEN + "Welcome " + fullName + ", you are logged in as a " + role + "." + RESET);
+    
+                return true;
+            } else {
+                System.out.println(RED + "Failed to fetch user details. Server returned error code: " + responseCode + RESET);
+                return false;
             }
-    
-            // If no match was found
-            System.out.println(RED + "User not found in the records." + RESET);
-            return false;
-    
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println(RED + "Error occurred while fetching user details." + RESET);
             return false;
         }
     }
-    
+
     private static void handleEmployeesManagement(Scanner scanner) {
         try {
             URL url = new URL("http://localhost:3333/users?branchId=" + userBranchId);
@@ -182,7 +186,7 @@ public class Client {
         // Print table headers
         System.out.printf(CYAN + "%-15s %-20s %-15s %-20s %-15s %-10s %-25s\n" + RESET, 
                         "Employee ID", "Full Name", "Account Number", "Employee Number", "Role", "BranchId", "PhoneNumber");
-        System.out.println(CYAN + "------------------------------------------------------------------------------------------" + RESET);
+        System.out.println(CYAN + "------------------------------------------------------------------------------------------------------" + RESET);
 
         // Print each customer in a row
         for (User employee : employees) {
@@ -199,7 +203,7 @@ public class Client {
    
     private static void handleCustomerManagement(Scanner scanner) {
         try {
-            URL url = new URL("http://localhost:3333/customers");
+            URL url = new URL("http://localhost:3333/customers/all");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
@@ -321,52 +325,86 @@ public class Client {
 
     // Handle buying a product
     private static void buyProduct(Scanner scanner) {
-    System.out.println(CYAN + "Enter Product ID to buy: " + RESET);
-    String productId = scanner.nextLine();
-
-    System.out.println(CYAN + "Enter quantity: " + RESET);
-    int quantity = Integer.parseInt(scanner.nextLine());
-
-    try {
-        URL url = new URL("http://localhost:3333/products/buy?productId=" + productId + "&quantity=" + quantity);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("POST");
-
-        int responseCode = connection.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            @SuppressWarnings("resource")
-            String responseMessage = new BufferedReader(new InputStreamReader(connection.getInputStream()))
-                    .lines().collect(Collectors.joining("\n"));
-            System.out.println(GREEN + responseMessage + RESET);
-        } else {
-            @SuppressWarnings("resource")
-            String errorMessage = new BufferedReader(new InputStreamReader(connection.getErrorStream()))
-                    .lines().collect(Collectors.joining("\n"));
-            System.out.println(RED + "Failed to buy product: " + errorMessage + RESET);
+        System.out.println(CYAN + "Enter Customer ID: " + RESET);
+        String customerId = scanner.nextLine();
+    
+        // Fetch and display customer details
+        Map<String, Object> customerDetails = fetchCustomerDetails(customerId);
+        if (customerDetails == null) {
+            System.out.println(RED + "Customer not found. Cannot proceed with purchase." + RESET);
+            return; // Stop the purchase process if the customer is not found
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-        System.out.println(RED + "Error occurred while buying the product." + RESET);
+    
+        // Extract and display customer information from the Map
+        String fullName = (String) customerDetails.get("fullName");
+        double salePercentage = (double) customerDetails.get("salePercentage");
+        // int points = (int) customerDetails.get("points");
+    
+        System.out.println(CYAN + fullName + " has a " + salePercentage + "% discount " + RESET);
+    
+        System.out.println(CYAN + "Enter Product ID to buy: " + RESET);
+        String productId = scanner.nextLine();
+    
+        System.out.println(CYAN + "Enter quantity: " + RESET);
+        int quantity = Integer.parseInt(scanner.nextLine());
+    
+        try {
+            // URL for the buy product request
+            URL url = new URL("http://localhost:3333/products/buy?productId=" + productId + "&quantity=" + quantity + "&customerId=" + customerId);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+    
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                @SuppressWarnings("resource")
+                String responseMessage = new BufferedReader(new InputStreamReader(connection.getInputStream()))
+                        .lines().collect(Collectors.joining("\n"));
+                System.out.println(GREEN + responseMessage + RESET);
+            } else {
+                @SuppressWarnings("resource")
+                String errorMessage = new BufferedReader(new InputStreamReader(connection.getErrorStream()))
+                        .lines().collect(Collectors.joining("\n"));
+                System.out.println(RED + "Failed to buy product: " + errorMessage + RESET);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(RED + "Error occurred while buying the product." + RESET);
+        }
     }
-}
-
 
     // Handle selling a product
     private static void sellProduct(Scanner scanner) {
+        System.out.println(CYAN + "Enter Customer ID: " + RESET);
+        String customerId = scanner.nextLine();
+    
+        // Fetch and display customer details
+        Map<String, Object> customerDetails = fetchCustomerDetails(customerId);
+        if (customerDetails == null) {
+            System.out.println(RED + "Customer not found. Cannot proceed with selling." + RESET);
+            return; // Stop the sale process if the customer is not found
+        }
+    
+        // Extract and display customer information
+        String fullName = (String) customerDetails.get("fullName");
+        double salePercentage = (double) customerDetails.get("salePercentage");
+        // int points = (int) customerDetails.get("points");
+    
+        System.out.println(CYAN + "To " + fullName + " has " + salePercentage + "% sale and " + RESET);
+    
         System.out.println(CYAN + "Enter Product ID to sell: " + RESET);
         String productId = scanner.nextLine();
-
+    
         System.out.println(CYAN + "Enter quantity: " + RESET);
         int quantity = Integer.parseInt(scanner.nextLine());
-
+    
         try {
-            URL url = new URL("http://localhost:3333/products/sell?productId=" + productId + "&quantity=" + quantity);
+            URL url = new URL("http://localhost:3333/products/sell?productId=" + productId + "&quantity=" + quantity + "&customerId=" + customerId);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
-
+    
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                System.out.println(GREEN + "Sale successful!" + RESET);
+                System.out.println(GREEN + "Sell successful!" + RESET);
             } else {
                 System.out.println(RED + "Failed to sell product. Server returned error code: " + responseCode + RESET);
             }
@@ -375,7 +413,36 @@ public class Client {
             System.out.println(RED + "Error occurred while selling the product." + RESET);
         }
     }
+    
 
+    private static Map<String, Object> fetchCustomerDetails(String customerId) {
+        try {
+            URL url = new URL("http://localhost:3333/customers/" + customerId + "/details");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+    
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                // Parse the response as a Map<String, Object>
+                @SuppressWarnings("resource")
+                String response = new BufferedReader(new InputStreamReader(connection.getInputStream()))
+                        .lines().collect(Collectors.joining("\n"));
+    
+                ObjectMapper objectMapper = new ObjectMapper();
+                // Deserialize JSON response into a Map<String, Object>
+                return objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {});
+            } else {
+                System.out.println(RED + "Failed to fetch customer details. Server returned error code: " + responseCode + RESET);
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(RED + "Error occurred while fetching customer details." + RESET);
+            return null;
+        }
+    }
+    
+    
     private static void runMainMenu(Scanner scanner) {
         boolean running = true;
         while (running) {

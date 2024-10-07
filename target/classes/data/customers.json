@@ -1,0 +1,86 @@
+[
+    {
+        "customerId": "C001",
+        "fullName": "Hila Cohen",
+        "postalCode": "12345",
+        "phoneNumber": "+1234567890",
+        "customerType": "NEW"
+    },
+    {
+        "customerId": "C002",
+        "fullName": "David Levi",
+        "postalCode": "67890",
+        "phoneNumber": "+0987654321",
+        "customerType": "RETURNING"
+    },
+    {
+        "customerId": "C003",
+        "fullName": "Sara Katz",
+        "postalCode": "23456",
+        "phoneNumber": "+1122334455",
+        "customerType": "VIP"
+    },
+    {
+        "customerId": "C004",
+        "fullName": "Maya Schneider",
+        "postalCode": "34567",
+        "phoneNumber": "+2233445566",
+        "customerType": "NEW"
+    },
+    {
+        "customerId": "C005",
+        "fullName": "Yael Rosen",
+        "postalCode": "45678",
+        "phoneNumber": "+3344556677",
+        "customerType": "RETURNING"
+    },
+    {
+        "customerId": "C006",
+        "fullName": "Oren Ben David",
+        "postalCode": "56789",
+        "phoneNumber": "+4455667788",
+        "customerType": "VIP"
+    },
+    {
+        "customerId": "C007",
+        "fullName": "Talia Goldstein",
+        "postalCode": "67890",
+        "phoneNumber": "+5566778899",
+        "customerType": "NEW"
+    },
+    {
+        "customerId": "C008",
+        "fullName": "Eli Friedman",
+        "postalCode": "78901",
+        "phoneNumber": "+6677889900",
+        "customerType": "RETURNING"
+    },
+    {
+        "customerId": "C009",
+        "fullName": "Nir Avraham",
+        "postalCode": "89012",
+        "phoneNumber": "+7788990011",
+        "customerType": "NEW"
+    },
+    {
+        "customerId": "C010",
+        "fullName": "Lior Biton",
+        "postalCode": "90123",
+        "phoneNumber": "+8899001122",
+        "customerType": "RETURNING"
+    },
+    {
+        "customerId": "C011",
+        "fullName": "Miriam Shalev",
+        "postalCode": "01234",
+        "phoneNumber": "+9900112233",
+        "customerType": "VIP"
+    },
+    {
+        "customerId": "C012",
+        "fullName": "Roni Cohen",
+        "postalCode": "12346",
+        "phoneNumber": "+1234567891",
+        "customerType": "NEW"
+    }
+]

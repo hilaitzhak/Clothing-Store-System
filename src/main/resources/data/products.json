@@ -1,0 +1,193 @@
+[
+    {
+        "productId": "P001",
+        "productName": "T-Shirt",
+        "price": 19.99,
+        "stockQuantity": 100,
+        "branchIds": [
+            "B001",
+            "B002"
+        ]
+    },
+    {
+        "productId": "P002",
+        "productName": "Jeans",
+        "price": 49.99,
+        "stockQuantity": 50,
+        "branchIds": [
+            "B001"
+        ]
+    },
+    {
+        "productId": "P003",
+        "productName": "Jacket",
+        "price": 79.99,
+        "stockQuantity": 20,
+        "branchIds": [
+            "B002",
+            "B003"
+        ]
+    },
+    {
+        "productId": "P004",
+        "productName": "Sneakers",
+        "price": 59.99,
+        "stockQuantity": 35,
+        "branchIds": [
+            "B003"
+        ]
+    },
+    {
+        "productId": "P005",
+        "productName": "Hat",
+        "price": 15.99,
+        "stockQuantity": 75,
+        "branchIds": [
+            "B001",
+            "B003"
+        ]
+    },
+    {
+        "productId": "P006",
+        "productName": "Socks",
+        "price": 5.99,
+        "stockQuantity": 200,
+        "branchIds": [
+            "B002"
+        ]
+    },
+    {
+        "productId": "P007",
+        "productName": "Belt",
+        "price": 24.99,
+        "stockQuantity": 60,
+        "branchIds": [
+            "B001",
+            "B002",
+            "B003"
+        ]
+    },
+    {
+        "productId": "P008",
+        "productName": "Dress",
+        "price": 69.99,
+        "stockQuantity": 30,
+        "branchIds": [
+            "B001"
+        ]
+    },
+    {
+        "productId": "P009",
+        "productName": "Blouse",
+        "price": 29.99,
+        "stockQuantity": 40,
+        "branchIds": [
+            "B002",
+            "B003"
+        ]
+    },
+    {
+        "productId": "P010",
+        "productName": "Scarf",
+        "price": 14.99,
+        "stockQuantity": 90,
+        "branchIds": [
+            "B001",
+            "B003"
+        ]
+    },
+    {
+        "productId": "P011",
+        "productName": "Gloves",
+        "price": 12.99,
+        "stockQuantity": 85,
+        "branchIds": [
+            "B002"
+        ]
+    },
+    {
+        "productId": "P012",
+        "productName": "Sweatshirt",
+        "price": 34.99,
+        "stockQuantity": 45,
+        "branchIds": [
+            "B003"
+        ]
+    },
+    {
+        "productId": "P013",
+        "productName": "Skirt",
+        "price": 39.99,
+        "stockQuantity": 24,
+        "branchIds": [
+            "B001"
+        ]
+    },
+    {
+        "productId": "P014",
+        "productName": "Boots",
+        "price": 89.99,
+        "stockQuantity": 15,
+        "branchIds": [
+            "B002",
+            "B003"
+        ]
+    },
+    {
+        "productId": "P015",
+        "productName": "Sandals",
+        "price": 44.99,
+        "stockQuantity": 50,
+        "branchIds": [
+            "B001",
+            "B003"
+        ]
+    },
+    {
+        "productId": "P016",
+        "productName": "Sunglasses",
+        "price": 19.99,
+        "stockQuantity": 120,
+        "branchIds": [
+            "B002"
+        ]
+    },
+    {
+        "productId": "P017",
+        "productName": "Watch",
+        "price": 129.99,
+        "stockQuantity": 25,
+        "branchIds": [
+            "B003"
+        ]
+    },
+    {
+        "productId": "P018",
+        "productName": "Necklace",
+        "price": 49.99,
+        "stockQuantity": 70,
+        "branchIds": [
+            "B001"
+        ]
+    },
+    {
+        "productId": "P019",
+        "productName": "Bracelet",
+        "price": 29.99,
+        "stockQuantity": 80,
+        "branchIds": [
+            "B002",
+            "B003"
+        ]
+    },
+    {
+        "productId": "P020",
+        "productName": "Cap",
+        "price": 9.99,
+        "stockQuantity": 0,
+        "branchIds": [
+            "B001",
+            "B002"
+        ]
+    }
+]

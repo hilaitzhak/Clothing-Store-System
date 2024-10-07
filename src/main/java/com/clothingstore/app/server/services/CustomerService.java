@@ -1,93 +1,102 @@
 package com.clothingstore.app.server.services;
 
-import com.clothingstore.app.server.models.*;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.clothingstore.app.server.models.Customer;
+import com.clothingstore.app.server.models.Enums.CustomerType;
+import com.clothingstore.app.server.models.NewCustomer;
+import com.clothingstore.app.server.models.ReturningCustomer;
+import com.clothingstore.app.server.models.VIPCustomer;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class CustomerService {
+    private static final String CUSTOMERS_FILE = "src/main/resources/data/customers.json";
 
-    private List<Customer> customers = new ArrayList<>(); // Initialize the customers list
-
-    public CustomerService() {
+    public List<Customer> getAllCustomers() {
         try {
-            loadCustomers();
+            ObjectMapper objectMapper = new ObjectMapper();
+            File file = new File(CUSTOMERS_FILE);
+        
+            // Load customers from JSON file
+            List<Customer> customers = objectMapper.readValue(file, new TypeReference<List<Customer>>() {});
+            return customers;
         } catch (IOException e) {
             throw new RuntimeException("Error loading customers from JSON file", e);
         }
+        // Clear existing customers list if necessary
+        // customers.clear();
     }
 
-    private void loadCustomers() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        File file = new File("src/main/java/com/clothingstore/app/server/data/customers.json");
 
-        // Read the data from JSON file
-        List<Customer> tempCustomers = objectMapper.readValue(file, new TypeReference<List<Customer>>() {});
+    // public List<Customer> getAllCustomers() {
+    //     return customers;
+    // }
 
-        // Populate the correct customer types based on customerType
-        for (Customer tempCustomer : tempCustomers) {
-            switch (tempCustomer.getCustomerType()) {
-                case NEW:
-                    customers.add(new NewCustomer(
-                        tempCustomer.getCustomerId(),
-                        tempCustomer.getFullName(),
-                        tempCustomer.getPostalCode(),
-                        tempCustomer.getPhoneNumber(),
-                        tempCustomer.getCustomerType()
-                    ));
-                    break;
-                case RETURNING:
-                    customers.add(new ReturningCustomer(
-                        tempCustomer.getCustomerId(),
-                        tempCustomer.getFullName(),
-                        tempCustomer.getPostalCode(),
-                        tempCustomer.getPhoneNumber(),
-                        tempCustomer.getCustomerType()
-                    ));
-                    break;
-                case VIP:
-                    customers.add(new VIPCustomer(
-                        tempCustomer.getCustomerId(),
-                        tempCustomer.getFullName(),
-                        tempCustomer.getPostalCode(),
-                        tempCustomer.getPhoneNumber(),
-                        tempCustomer.getCustomerType()
-                    ));
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown customer type: " + tempCustomer.getCustomerType());
-            }
-        }
-    }
+    // public Optional<Customer> getCustomerById(String customerId) {
+        
+    //     return customers.stream().filter(c -> c.getCustomerId().equalsIgnoreCase(customerId)).findFirst();
+    // }
 
-    public List<Customer> getAllCustomers() {
-        return customers;
-    }
 
     public Optional<Customer> getCustomerById(String customerId) {
-        return customers.stream().filter(c -> c.getCustomerId().equals(customerId)).findFirst();
+        List<Customer> customers = getAllCustomers();
+        return customers.stream()
+                       .filter(customer -> customer.getCustomerId().equals(customerId))
+                       .findFirst();
     }
 
     public List<Customer> getCustomersByType(String customerType) {
+        List<Customer> customers = getAllCustomers();
         return customers.stream()
                 .filter(customer -> customer.getCustomerType().name().equalsIgnoreCase(customerType))
                 .toList();
     }
 
-    public String handlePurchase(String customerId) {
+    public Map<String, Object> getCustomerDetailsMessage(String customerId) {
         Optional<Customer> customerOpt = getCustomerById(customerId);
+        System.out.println("customerOpt: " + customerOpt);
         if (customerOpt.isPresent()) {
             Customer customer = customerOpt.get();
-            return customer.handlePurchase();
+            System.out.println("customer: " + customer);
+            CustomerType customerType = customer.getCustomerType();
+            if(customerType != null) {
+                double salePercentage = customer.getDiscountPercentage() * 100;
+                System.out.println("salePercentage: " + salePercentage);
+                
+    
+                // Create a map to hold customer details
+                Map<String, Object> customerDetails = new HashMap<>();
+                customerDetails.put("fullName", customer.getFullName());
+                customerDetails.put("customerType", customerType);
+                customerDetails.put("salePercentage", salePercentage);
+    
+                return customerDetails;
+            } else {
+                throw new RuntimeException("Customer type is not set for customer ID: " + customerId);
+            }
         } else {
-            return "Customer not found.";
+            throw new RuntimeException("Customer not found.");
         }
     }
+
+    // public void saveCustomer(Customer customer) {
+    //     try {
+    //         List<Customer> customers = getAllCustomers();
+            
+    //         ObjectMapper objectMapper = new ObjectMapper();
+    //         objectMapper.writeValue(new File(CUSTOMERS_FILE), customers);
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
+    // }
 }

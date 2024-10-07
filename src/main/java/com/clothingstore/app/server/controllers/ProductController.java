@@ -3,7 +3,6 @@ package com.clothingstore.app.server.controllers;
 import com.clothingstore.app.server.models.Product;
 import com.clothingstore.app.server.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +19,7 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+
     // Get products for the user's branch
     @GetMapping
     public List<Product> getProductsByBranch(@RequestParam String branchId) {
@@ -31,9 +31,9 @@ public class ProductController {
 
     // Handle buying a product
     @PostMapping("/buy")
-    public ResponseEntity<String> buyProduct(@RequestParam String productId, @RequestParam int quantity) {
+    public ResponseEntity<String> buyProduct(@RequestParam String productId, @RequestParam int quantity, @RequestParam String customerId) {
         try {
-            productService.buyProduct(productId, quantity);
+            productService.buyProduct(productId, quantity, customerId);
             return ResponseEntity.ok("Purchase successful!");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -43,7 +43,12 @@ public class ProductController {
 
     // Handle selling a product
     @PostMapping("/sell")
-    public boolean sellProduct(@RequestParam String productId, @RequestParam int quantity) {
-        return productService.sellProduct(productId, quantity);
+    public ResponseEntity<String> sellProduct(@RequestParam String productId, @RequestParam int quantity, @RequestParam String customerId) {
+        try {
+            productService.sellProduct(productId, quantity, customerId);
+            return ResponseEntity.ok("Sell successful!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

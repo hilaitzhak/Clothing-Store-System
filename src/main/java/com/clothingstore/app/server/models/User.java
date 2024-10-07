@@ -24,6 +24,16 @@ public class User {
         this.password = password;
     }
 
+    public User(String userId, String fullName, String accountNumber, String employeeNumber, UserRole role, String branchId, String phoneNumber) {
+        this.userId = userId;
+        this.fullName = fullName;
+        this.accountNumber = accountNumber;
+        this.employeeNumber = employeeNumber;
+        this.role = role;
+        this.branchId = branchId;
+        this.phoneNumber = phoneNumber;
+    }
+
     public String getUserId() {
         return userId;
     }
