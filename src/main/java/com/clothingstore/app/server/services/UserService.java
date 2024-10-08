@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -34,18 +35,23 @@ public class UserService {
     }
 
     // Get all users with a specific branch
+    // public List<User> getUsersByBranchId(String branchId) {
+    //     List<User> relevantUsers = new ArrayList<>();
+    //     for (User user : users) {
+    //         System.out.println("User: " + user);  // Print each user to verify their details
+    //         if (user.getBranchId().equalsIgnoreCase(branchId)) {
+    //             relevantUsers.add(user);
+    //         }
+    //     }
+    //     return relevantUsers;
+    // }
+    
+
     public List<User> getUsersByBranchId(String branchId) {
-        List<User> relevantUsers = new ArrayList<>();
-        for (User user : users) {
-            System.out.println("User: " + user);  // Print each user to verify their details
-            if (user.getBranchId().equalsIgnoreCase(branchId)) {
-                relevantUsers.add(user);
-            }
-        }
-        return relevantUsers;
+    return users.stream()
+            .filter(user -> user.getBranchId().equals(branchId))
+            .collect(Collectors.toList());
     }
-    
-    
 
     // New login method to check credentials
     public boolean login(String username, String password) {
@@ -69,7 +75,14 @@ public class UserService {
         }
     }
 
-    private Optional<User> getUserByUsername(String username) {
-        return users.stream().filter(c -> c.getUsername().equals(username)).findFirst();
+    public boolean isShiftManager(String username) {
+        Optional<User> userOpt = getUserByUsername(username);
+        return userOpt.map(User::isShiftManager).orElse(false);
+    }
+
+    public Optional<User> getUserByUsername(String username) {
+        return users.stream()
+                .filter(user -> user.getUsername().equals(username))
+                .findFirst();
     }
 }

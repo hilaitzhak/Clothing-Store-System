@@ -3,18 +3,26 @@ package com.clothingstore.app.client;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.clothingstore.app.server.models.Customer;
 import com.clothingstore.app.server.models.Product;
 import com.clothingstore.app.server.models.User;
+// import com.clothingstore.app.server.chat.ChatServer;
 
 public class Client {
     // ANSI escape codes for colors
@@ -442,7 +450,289 @@ public class Client {
         }
     }
     
+
+    private static final String API_BASE_URL = "http://localhost:3333/chat";
+    private static final int CHAT_WIDTH = 70;
+    private static final int POLLING_INTERVAL = 1000; // 1 second
+
+    private static void handleChatSystem(Scanner scanner) {
+        boolean chatting = true;
+        while (chatting) {
+            System.out.println(CYAN + "Chat Management" + RESET);
+            System.out.println("1. Request Chat");
+            System.out.println("2. Join Chat");
+            System.out.println("3. Send Message");
+            System.out.println("4. Close Chat");
+            System.out.println("5. Check Chat Status");
+            System.out.println("6. Join Chat as Shift Manager");
+            System.out.println("7. View Active Chats");
+            System.out.println("0. Back to Main Menu");
+            System.out.print("Enter your choice: ");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    requestChat(scanner);
+                    break;
+                case 2:
+                    joinChat(scanner);
+                    break;
+                case 3:
+                    sendMessage(scanner);
+                    break;
+                case 4:
+                    closeChat(scanner);
+                    break;
+                case 5:
+                    checkChatStatus(scanner);
+                    break;
+                case 6:
+                    joinChatAsManager(scanner);
+                    break;
+                case 7:
+                    viewActiveChats();
+                    break;
+                case 0:
+                    chatting = false;
+                    break;
+                default:
+                    System.out.println(RED + "Invalid choice." + RESET);
+            }
+        }
+    }
+
+
+    private static void requestChat(Scanner scanner) {
+        System.out.print("Enter your username: ");
+        String username = scanner.nextLine();
+
+        try {
+            URL url = new URL(API_BASE_URL + "/request?username=" + URLEncoder.encode(username, "UTF-8"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String response = reader.readLine();
+            System.out.println(GREEN + response + RESET);
+        } catch (Exception e) {
+            System.out.println(RED + "Error requesting chat: " + e.getMessage() + RESET);
+        }
+    }
+
+    private static void joinChat(Scanner scanner) {
+        System.out.print("Enter your username: ");
+        String username = scanner.nextLine();
+
+        try {
+            URL url = new URL(API_BASE_URL + "/join?username=" + URLEncoder.encode(username, "UTF-8"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String response = reader.readLine();
+            System.out.println(GREEN + response + RESET);
+        } catch (Exception e) {
+            System.out.println(RED + "Error joining chat: " + e.getMessage() + RESET);
+        }
+    }
+
+    // private static void sendMessage(Scanner scanner) {
+    //     System.out.print("Enter chat ID: ");
+    //     String chatId = scanner.nextLine();
+    //     System.out.print("Enter your username: ");
+    //     String username = scanner.nextLine();
+    //     System.out.print("Enter your message: ");
+    //     String message = scanner.nextLine();
+
+    //     try {
+    //         URL url = new URL(API_BASE_URL + "/message?chatId=" + URLEncoder.encode(chatId, "UTF-8") +
+    //                 "&username=" + URLEncoder.encode(username, "UTF-8") +
+    //                 "&message=" + URLEncoder.encode(message, "UTF-8"));
+    //         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    //         conn.setRequestMethod("POST");
+
+    //         BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+    //         String response = reader.readLine();
+    //         System.out.println(GREEN + response + RESET);
+    //     } catch (Exception e) {
+    //         System.out.println(RED + "Error sending message: " + e.getMessage() + RESET);
+    //     }
+    // }
+
+        private static void sendMessage(Scanner scanner) {
+        System.out.print("Enter your username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter chat ID: ");
+        String chatId = scanner.nextLine();
+
+        List<String> messages = new ArrayList<>();
+        boolean chatting = true;
+
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.scheduleAtFixedRate(() -> {
+            List<String> newMessages = fetchMessages(chatId, username);
+            if (!newMessages.equals(messages)) {
+                messages.clear();
+                messages.addAll(newMessages);
+                displayChatWindow(messages);
+            }
+        }, 0, POLLING_INTERVAL, TimeUnit.MILLISECONDS);
+
+        while (chatting) {
+            // System.out.print("Enter message (or 'EXIT' to leave): ");
+            String input = scanner.nextLine();
+
+            if ("EXIT".equalsIgnoreCase(input)) {
+                chatting = false;
+            } else {
+                sendMessageToServer(chatId, username, input);
+            }
+        }
+
+        executor.shutdownNow();
+        System.out.println("Chat ended. Press Enter to return to the main menu.");
+        scanner.nextLine();
+    }
+
+    private static void displayChatWindow(List<String> messages) {
+        clearConsole();
+        System.out.println("+" + "-".repeat(CHAT_WIDTH) + "+");
+        for (String message : messages) {
+            // Remove the square brackets and quotes from the message
+            message = message.replaceAll("[\\[\\]\"]", "");
+            String[] parts = message.split(":", 2);
+            if (parts.length == 2) {
+                String sender = parts[0].trim();
+                String content = parts[1].trim();
+
+                System.out.printf("| %-10s: %-" + (CHAT_WIDTH - 14) + "s |\n", sender, content);
+            }
+        }
+        System.out.println("+" + "-".repeat(CHAT_WIDTH) + "+");
+        System.out.print("Enter message (or 'EXIT' to leave): ");
+    }
+
+    private static void sendMessageToServer(String chatId, String username, String message) {
+        try {
+            URL url = new URL(API_BASE_URL + "/message?chatId=" + URLEncoder.encode(chatId, "UTF-8") +
+                    "&username=" + URLEncoder.encode(username, "UTF-8") +
+                    "&message=" + URLEncoder.encode(message, "UTF-8"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.getInputStream().close();
+        } catch (Exception e) {
+            System.out.println(RED + "Error sending message: " + e.getMessage() + RESET);
+        }
+    }
+
+    private static List<String> fetchMessages(String chatId, String username) {
+        List<String> messages = new ArrayList<>();
+        try {
+            URL url = new URL(API_BASE_URL + "/messages?chatId=" + URLEncoder.encode(chatId, "UTF-8") +
+                    "&username=" + URLEncoder.encode(username, "UTF-8"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                messages.add(line);
+            }
+        } catch (Exception e) {
+            System.out.println(RED + "Error fetching messages: " + e.getMessage() + RESET);
+        }
+        return messages;
+    }
+
+    private static void clearConsole() {
+        try {
+            final String os = System.getProperty("os.name");
+            if (os.contains("Windows")) {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                Runtime.getRuntime().exec("clear");
+            }
+        } catch (Exception e) {
+            // If we can't clear the console, just print a bunch of newlines
+            for (int i = 0; i < 50; i++) {
+                System.out.println();
+            }
+        }
+    }
+
+    private static void closeChat(Scanner scanner) {
+        System.out.print("Enter chat ID: ");
+        String chatId = scanner.nextLine();
+
+        try {
+            URL url = new URL(API_BASE_URL + "/close?chatId=" + URLEncoder.encode(chatId, "UTF-8"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String response = reader.readLine();
+            System.out.println(GREEN + response + RESET);
+        } catch (Exception e) {
+            System.out.println(RED + "Error closing chat: " + e.getMessage() + RESET);
+        }
+    }
+
+    private static void checkChatStatus(Scanner scanner) {
+        System.out.print("Enter your username: ");
+        String username = scanner.nextLine();
+
+        try {
+            URL url = new URL(API_BASE_URL + "/status?username=" + URLEncoder.encode(username, "UTF-8"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String response = reader.readLine();
+            System.out.println(GREEN + response + RESET);
+        } catch (Exception e) {
+            System.out.println(RED + "Error checking chat status: " + e.getMessage() + RESET);
+        }
+    }
     
+    private static void joinChatAsManager(Scanner scanner) {
+        System.out.print("Enter your username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter chat ID to join: ");
+        String chatId = scanner.nextLine();
+
+        try {
+            URL url = new URL(API_BASE_URL + "/chat/join-as-manager?username=" + URLEncoder.encode(username, "UTF-8") +
+                    "&chatId=" + URLEncoder.encode(chatId, "UTF-8"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String response = reader.readLine();
+            System.out.println(GREEN + response + RESET);
+        } catch (Exception e) {
+            System.out.println(RED + "Error joining chat as manager: " + e.getMessage() + RESET);
+        }
+    }
+
+    private static void viewActiveChats() {
+        try {
+            URL url = new URL(API_BASE_URL + "/chat/active");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String response;
+            System.out.println(GREEN + "Active Chats:" + RESET);
+            while ((response = reader.readLine()) != null) {
+                System.out.println(response);
+            }
+        } catch (Exception e) {
+            System.out.println(RED + "Error viewing active chats: " + e.getMessage() + RESET);
+        }
+    }
+
     private static void runMainMenu(Scanner scanner) {
         boolean running = true;
         while (running) {
@@ -464,7 +754,7 @@ public class Client {
                     handleEmployeesManagement(scanner);
                     break;
                 case 5:
-                    // Implement chat system
+                    handleChatSystem(scanner);
                     break;
                 case 6:
                     // Implement system logs
@@ -486,13 +776,13 @@ public class Client {
         System.out.println(BLUE + "---------------------------" + RESET);
         System.out.println(BLUE + " Clothing Store Management " + RESET);
         System.out.println(BLUE + "---------------------------" + RESET);
-        System.out.println("1. Inventory Management");
-        System.out.println("2. Customer Management");
+        System.out.println("1. Manage Products");
+        System.out.println("2. Manage Customers");
         System.out.println("3. Sales Reports");
-        System.out.println("4. Employee Management");
+        System.out.println("4. Manage Employees");
         System.out.println("5. Chat System");
         System.out.println("6. System Logs");
         System.out.println("0. Exit");
-        System.out.print("Enter your choice: ");
+        System.out.print("Select an option: ");
     }
 }

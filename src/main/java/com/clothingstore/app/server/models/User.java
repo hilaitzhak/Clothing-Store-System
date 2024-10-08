@@ -1,8 +1,10 @@
 package com.clothingstore.app.server.models;
 
 import com.clothingstore.app.server.models.Enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
     private String userId;
     private String username;
@@ -106,5 +108,9 @@ public class User {
 
     public void setBranchId(String branchId) {
         this.branchId = branchId;
+    }
+
+    public boolean isShiftManager() {
+        return this.role == UserRole.SHIFT_MANAGER;
     }
 }

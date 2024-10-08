@@ -15,9 +15,6 @@ public class ReturningCustomer extends Customer {
         super();
         // setDiscountPercentage(0.2);
     }
-    // public ReturningCustomer(String customerId, String fullName, String postalCode, String phoneNumber) {
-    //     super(customerId, fullName, postalCode, phoneNumber, CustomerType.RETURNING,0.2);
-    // }
     @JsonCreator
     public ReturningCustomer(
         @JsonProperty("customerId") String customerId,

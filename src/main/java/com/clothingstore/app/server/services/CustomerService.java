@@ -2,7 +2,6 @@ package com.clothingstore.app.server.services;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,9 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.clothingstore.app.server.models.Customer;
 import com.clothingstore.app.server.models.Enums.CustomerType;
-import com.clothingstore.app.server.models.NewCustomer;
-import com.clothingstore.app.server.models.ReturningCustomer;
-import com.clothingstore.app.server.models.VIPCustomer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
