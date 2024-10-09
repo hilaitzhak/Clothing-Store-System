@@ -218,5 +218,27 @@
         "phoneNumber": "456-789-3211",
         "role": "SHIFT_MANAGER",
         "branchId": "B002"
+    },
+    {
+        "userId": "U021",
+        "username": "hilai",
+        "password": "123",
+        "fullName": "Hila Itzhak",
+        "accountNumber": "ACC001",
+        "employeeNumber": "EMP001",
+        "phoneNumber": "123-456-7890",
+        "role": "SELLER",
+        "branchId": "B001"
+    },
+    {
+        "userId": "U002",
+        "username": "tomerz",
+        "password": "1234",
+        "fullName": "Tomer Zaidler",
+        "accountNumber": "ACC005",
+        "employeeNumber": "EMP002",
+        "phoneNumber": "987-654-3289",
+        "role": "CASHIER",
+        "branchId": "B003"
     }
 ]

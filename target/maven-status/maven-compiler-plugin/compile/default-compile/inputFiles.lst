@@ -1,8 +1,7 @@
 /Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/client/Client.java
 /Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/Main.java
-/Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/chat/ChatHandler.java
-/Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/chat/ChatServer.java
-/Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/controllers/ChatController.java
+/Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/chat/SocketServer.java
+/Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/chat/SocketServerRunner.java
 /Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/controllers/CustomerController.java
 /Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/controllers/ProductController.java
 /Users/hilaitzhak/Desktop/dev/projects/Clothing-Store-System/src/main/java/com/clothingstore/app/server/controllers/UsersController.java

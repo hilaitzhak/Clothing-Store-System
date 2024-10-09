@@ -9,11 +9,12 @@ com/clothingstore/app/client/Client$2.class
 com/clothingstore/app/server/controllers/ProductController.class
 com/clothingstore/app/server/models/Enums$UserRole.class
 com/clothingstore/app/server/models/VIPCustomer.class
-com/clothingstore/app/server/controllers/ChatController.class
 com/clothingstore/app/client/Client$5.class
 com/clothingstore/app/client/Client$3.class
 com/clothingstore/app/server/services/CustomerService$1.class
 com/clothingstore/app/client/Client$1.class
+com/clothingstore/app/client/Client$MessageReceiver.class
+com/clothingstore/app/server/chat/SocketServer.class
 com/clothingstore/app/server/models/Chat.class
 com/clothingstore/app/server/controllers/CustomerController.class
 com/clothingstore/app/server/services/ProductService.class
@@ -26,3 +27,4 @@ com/clothingstore/app/server/services/UserService$1.class
 com/clothingstore/app/client/Client.class
 com/clothingstore/app/server/controllers/UsersController.class
 com/clothingstore/app/server/services/ProductService$1.class
+com/clothingstore/app/server/chat/SocketServer$ClientHandler.class

@@ -113,4 +113,6 @@ public class User {
     public boolean isShiftManager() {
         return this.role == UserRole.SHIFT_MANAGER;
     }
+    
+
 }

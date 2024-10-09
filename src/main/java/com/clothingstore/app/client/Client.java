@@ -2,17 +2,18 @@ package com.clothingstore.app.client;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Scanner;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -35,6 +36,12 @@ public class Client {
 
     private static final int MAX_LOGIN_ATTEMPTS = 3;
     private static String userBranchId;
+    private static Socket socket;
+    private static BufferedReader in;
+    private static PrintWriter out;
+    private static String currentUser;
+    private static List<String> chatMessages = Collections.synchronizedList(new ArrayList<>());
+
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -451,72 +458,92 @@ public class Client {
     }
     
 
-    private static final String API_BASE_URL = "http://localhost:3333/chat";
-    private static final int CHAT_WIDTH = 70;
-    private static final int POLLING_INTERVAL = 1000; // 1 second
+    private static final String CHAT_SERVER_ADDRESS = "localhost";
+    private static final int CHAT_SERVER_PORT = 3334;
+    private static final int CHAT_WIDTH = 80;
+    // private static final int POLLING_INTERVAL = 1000; // 1 second
 
     private static void handleChatSystem(Scanner scanner) {
-        boolean chatting = true;
-        while (chatting) {
-            System.out.println(CYAN + "Chat Management" + RESET);
-            System.out.println("1. Request Chat");
-            System.out.println("2. Join Chat");
-            System.out.println("3. Send Message");
-            System.out.println("4. Close Chat");
-            System.out.println("5. Check Chat Status");
-            System.out.println("6. Join Chat as Shift Manager");
-            System.out.println("7. View Active Chats");
-            System.out.println("0. Back to Main Menu");
-            System.out.print("Enter your choice: ");
+        try {
+            connectToChatServer();
 
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            boolean chatting = true;
+            while (chatting) {
+                displayChatMenu();
+                int choice = getUserChoice(scanner);
 
-            switch (choice) {
-                case 1:
-                    requestChat(scanner);
-                    break;
-                case 2:
-                    joinChat(scanner);
-                    break;
-                case 3:
-                    sendMessage(scanner);
-                    break;
-                case 4:
-                    closeChat(scanner);
-                    break;
-                case 5:
-                    checkChatStatus(scanner);
-                    break;
-                case 6:
-                    joinChatAsManager(scanner);
-                    break;
-                case 7:
-                    viewActiveChats();
-                    break;
-                case 0:
-                    chatting = false;
-                    break;
-                default:
-                    System.out.println(RED + "Invalid choice." + RESET);
+                switch (choice) {
+                    case 1:
+                        requestChat(scanner);
+                        break;
+                    case 2:
+                        joinChat(scanner);
+                        break;
+                    case 3:
+                        sendMessage(scanner);
+                        break;
+                    case 4:
+                        closeChat(scanner);
+                        break;
+                    case 5:
+                        joinChatAsManager(scanner);
+                        break;
+                    case 6:
+                        viewActiveChats();
+                        break;
+                    case 0:
+                        chatting = false;
+                        break;
+                    default:
+                        System.out.println(RED + "Invalid choice." + RESET);
+                }
             }
+        } catch (IOException e) {
+            System.out.println(RED + "Error in chat system: " + e.getMessage() + RESET);
+        } finally {
+            closeConnection();
         }
     }
 
+    private static void displayChatMenu() {
+        System.out.println(CYAN + "Chat Management" + RESET);
+        System.out.println("1. Request Chat");
+        System.out.println("2. Join Chat");
+        System.out.println("3. Send Message");
+        System.out.println("4. Close Chat");
+        System.out.println("5. Join Chat as Shift Manager");
+        System.out.println("6. View Active Chats");
+        System.out.println("0. Back to Main Menu");
+        System.out.print("Enter your choice: ");
+    }
+
+    private static int getUserChoice(Scanner scanner) {
+        while (!scanner.hasNextInt()) {
+            System.out.println(RED + "Invalid input. Please enter a number." + RESET);
+            scanner.next();
+        }
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+        return choice;
+    }
+
+    private static void connectToChatServer() throws IOException {
+        System.out.println("Attempting to connect to chat server at " + CHAT_SERVER_ADDRESS + ":" + CHAT_SERVER_PORT);
+        socket = new Socket();
+        socket.connect(new InetSocketAddress(CHAT_SERVER_ADDRESS, CHAT_SERVER_PORT), 5000);
+        System.out.println("Successfully connected to chat server");
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
+    }
 
     private static void requestChat(Scanner scanner) {
         System.out.print("Enter your username: ");
         String username = scanner.nextLine();
-
+        out.println("REQUEST_CHAT:" + username);
         try {
-            URL url = new URL(API_BASE_URL + "/request?username=" + URLEncoder.encode(username, "UTF-8"));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String response = reader.readLine();
+            String response = in.readLine();
             System.out.println(GREEN + response + RESET);
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println(RED + "Error requesting chat: " + e.getMessage() + RESET);
         }
     }
@@ -524,212 +551,313 @@ public class Client {
     private static void joinChat(Scanner scanner) {
         System.out.print("Enter your username: ");
         String username = scanner.nextLine();
-
+        out.println("JOIN_CHAT:" + username);
         try {
-            URL url = new URL(API_BASE_URL + "/join?username=" + URLEncoder.encode(username, "UTF-8"));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String response = reader.readLine();
+            String response = in.readLine();
             System.out.println(GREEN + response + RESET);
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println(RED + "Error joining chat: " + e.getMessage() + RESET);
         }
     }
 
     // private static void sendMessage(Scanner scanner) {
-    //     System.out.print("Enter chat ID: ");
-    //     String chatId = scanner.nextLine();
     //     System.out.print("Enter your username: ");
-    //     String username = scanner.nextLine();
-    //     System.out.print("Enter your message: ");
-    //     String message = scanner.nextLine();
+    //     currentUser = scanner.nextLine().trim();
+    //     System.out.print("Enter chat ID: ");
+    //     String chatId = scanner.nextLine().trim();
 
+    //     // Check if username or chatId is empty
+    //     if (currentUser.isEmpty() || chatId.isEmpty()) {
+    //         System.out.println(RED + "Username and chat ID cannot be empty." + RESET);
+    //         return;
+    //     }
+
+    //     out.println("ENTER_CHAT:" + chatId + ":" + currentUser);
     //     try {
-    //         URL url = new URL(API_BASE_URL + "/message?chatId=" + URLEncoder.encode(chatId, "UTF-8") +
-    //                 "&username=" + URLEncoder.encode(username, "UTF-8") +
-    //                 "&message=" + URLEncoder.encode(message, "UTF-8"));
-    //         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-    //         conn.setRequestMethod("POST");
+    //         String response = in.readLine();
+    //         if (response != null && response.equals("CHAT_ENTERED")) {
+    //             System.out.println(GREEN + "Entered chat. Type 'EXIT' to leave." + RESET);
+    //             Thread receiverThread = new Thread(new MessageReceiver());
+    //             receiverThread.start();
 
-    //         BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-    //         String response = reader.readLine();
-    //         System.out.println(GREEN + response + RESET);
-    //     } catch (Exception e) {
-    //         System.out.println(RED + "Error sending message: " + e.getMessage() + RESET);
+    //             String message;
+    //             while (true) {
+    //                 displayChatWindow();
+    //                 System.out.print("Enter message (or 'EXIT' to leave): ");
+    //                 message = scanner.nextLine().trim(); // Trim whitespace from message
+    //                 if (message.equalsIgnoreCase("EXIT")) {
+    //                     break;
+    //                 }
+
+    //                 // Check if message is empty
+    //                 if (message.isEmpty()) {
+    //                     System.out.println(RED + "Message cannot be empty." + RESET);
+    //                     continue; // Skip sending if message is empty
+    //                 }
+
+    //                 String timestamp = getCurrentTimeInTimezone();
+    //                 out.println("SEND_MESSAGE:" + chatId + ":" + currentUser + ":" + message + ":" + timestamp);
+    //             }
+    //             out.println("LEAVE_CHAT:" + chatId + ":" + currentUser);
+    //             System.out.println(GREEN + "You have left the chat." + RESET);
+    //             receiverThread.interrupt(); // Stop the message receiver thread
+    //             try {
+    //                 receiverThread.join(); // Wait for the receiver thread to finish
+    //             } catch (InterruptedException e) {
+    //                 System.out.println(RED + "Error waiting for message receiver to finish: " + e.getMessage() + RESET);
+    //             }
+    //         } else {
+    //             System.out.println(RED + "Failed to enter chat: "
+    //                     + (response != null ? response : "No response from server") + RESET);
+    //         }
+    //     } catch (IOException e) {
+    //         System.out.println(RED + "Error in chat: " + e.getMessage() + RESET);
     //     }
     // }
 
-        private static void sendMessage(Scanner scanner) {
+    private static void sendMessage(Scanner scanner) {
         System.out.print("Enter your username: ");
-        String username = scanner.nextLine();
+        currentUser = scanner.nextLine();
         System.out.print("Enter chat ID: ");
         String chatId = scanner.nextLine();
 
-        List<String> messages = new ArrayList<>();
-        boolean chatting = true;
+        out.println("ENTER_CHAT:" + chatId + ":" + currentUser);
+        try {
+            String response = in.readLine();
+            if (response.equals("CHAT_ENTERED")) {
+                System.out.println(GREEN + "Entered chat. Type 'EXIT' to leave." + RESET);
+                Thread receiverThread = new Thread(new MessageReceiver());
+                receiverThread.start();
 
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(() -> {
-            List<String> newMessages = fetchMessages(chatId, username);
-            if (!newMessages.equals(messages)) {
-                messages.clear();
-                messages.addAll(newMessages);
-                displayChatWindow(messages);
+                String message;
+                while (true) {
+                    displayChatWindow();
+                    System.out.print("Enter a message or press 'EXIT' to close the chat: ");
+                    message = scanner.nextLine();
+                    if (message.equalsIgnoreCase("EXIT")) {
+                        out.println("LEAVE_CHAT:" + chatId + ":" + currentUser);
+                        System.out.println(GREEN + "You have left the chat." + RESET);
+                        receiverThread.interrupt(); // Interrupt the receiver thread
+                        break;
+                    }
+
+                    // Ensure the socket is still connected before sending
+                    if (socket.isConnected() && !socket.isClosed()) {
+                        String timestamp = getCurrentTimeInTimezone();
+                        out.println("SEND_MESSAGE:" + chatId + ":" + currentUser + ":" + message + ":" + timestamp);
+                    } else {
+                        System.out.println(RED + "Connection closed. Cannot send message." + RESET);
+                    }
+                }
+
+                // Wait for the receiver thread to finish after leaving the chat
+                try {
+                    receiverThread.join(); // Wait for the receiver thread to finish
+                } catch (InterruptedException e) {
+                    System.out.println(RED + "Error waiting for message receiver to finish: " + e.getMessage() + RESET);
+                }
             }
-        }, 0, POLLING_INTERVAL, TimeUnit.MILLISECONDS);
-
-        while (chatting) {
-            // System.out.print("Enter message (or 'EXIT' to leave): ");
-            String input = scanner.nextLine();
-
-            if ("EXIT".equalsIgnoreCase(input)) {
-                chatting = false;
-            } else {
-                sendMessageToServer(chatId, username, input);
-            }
+        } catch (IOException e) {
+            System.out.println(RED + "Error in chat communication: " + e.getMessage() + RESET);
         }
-
-        executor.shutdownNow();
-        System.out.println("Chat ended. Press Enter to return to the main menu.");
-        scanner.nextLine();
     }
 
-    private static void displayChatWindow(List<String> messages) {
+    private static String getCurrentTimeInTimezone() {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return now.format(formatter);
+    }
+
+    // private static class MessageReceiver implements Runnable {
+    //     @Override
+    //     public void run() {
+    //         try {
+    //             String message;
+    //             while (!Thread.currentThread().isInterrupted()) {
+    //                 message = in.readLine();
+    //                 if (message == null) {
+    //                     System.out.println(RED + "Chat server closed the connection." + RESET);
+    //                     break;
+    //                 }
+    //                 if (message.equals("CHAT_CLOSED")) {
+    //                     System.out.println(RED + "Chat has been closed." + RESET);
+    //                     break;
+    //                 }
+    //                 chatMessages.add(message);
+    //                 displayChatWindow();
+    //             }
+    //         } catch (IOException e) {
+    //             if (!Thread.currentThread().isInterrupted()) {
+    //                 System.out.println(RED + "Error receiving messages: " + e.getMessage() + RESET);
+    //             }
+    //         }
+    //     }
+    // }
+    private static class MessageReceiver implements Runnable {
+        @Override
+        public void run() {
+            String incomingMessage;
+            try {
+                while (!Thread.currentThread().isInterrupted() && (incomingMessage = in.readLine()) != null) {
+                    synchronized (chatMessages) {
+                        chatMessages.add(incomingMessage);
+                    }
+                    System.out.println("Received: " + incomingMessage);
+                }
+            } catch (IOException e) {
+                System.out.println(RED + "Error receiving messages: " + e.getMessage() + RESET);
+            }
+        }
+    }
+
+    private static void displayChatWindow() {
         clearConsole();
-        System.out.println("+" + "-".repeat(CHAT_WIDTH) + "+");
-        for (String message : messages) {
-            // Remove the square brackets and quotes from the message
-            message = message.replaceAll("[\\[\\]\"]", "");
-            String[] parts = message.split(":", 2);
-            if (parts.length == 2) {
-                String sender = parts[0].trim();
-                String content = parts[1].trim();
+        System.out.println(YELLOW + "+" + "-".repeat(CHAT_WIDTH) + "+" + RESET);
+        System.out.println(YELLOW + "|" + " ".repeat(CHAT_WIDTH) + "|" + RESET);
+        synchronized (chatMessages) {
 
-                System.out.printf("| %-10s: %-" + (CHAT_WIDTH - 14) + "s |\n", sender, content);
+            for (String message : chatMessages) {
+                String[] parts = message.split(":", 3);
+                if (parts.length == 3) {
+                    String sender = parts[0].trim();
+                    String content = parts[1].trim();
+                    String timestamp = parts[2].trim();
+
+                    boolean isSender = sender.equals(currentUser);
+                    String color = isSender ? BLUE : GREEN;
+                    String alignedMessage = String.format("%s%s [%s]:%s %s",
+                            color,
+                            sender,
+                            timestamp,
+                            RESET,
+                            content);
+
+                    List<String> wrappedLines = wordWrap(alignedMessage, CHAT_WIDTH - 4);
+
+                    for (int i = 0; i < wrappedLines.size(); i++) {
+                        String line = wrappedLines.get(i);
+                        if (isSender) {
+                            System.out.printf(YELLOW + "│%s%-" + (CHAT_WIDTH - 2) + "s│" + RESET + "%n",
+                                    (i == 0 ? "" : "  "), line);
+                        } else {
+                            System.out.printf(YELLOW + "│%-" + (CHAT_WIDTH - 2) + "s%s│" + RESET + "%n",
+                                    line, (i == 0 ? "" : "  "));
+                        }
+                    }
+                    System.out.println(YELLOW + "│" + " ".repeat(CHAT_WIDTH - 2) + "│" + RESET);
+                }
             }
         }
-        System.out.println("+" + "-".repeat(CHAT_WIDTH) + "+");
-        System.out.print("Enter message (or 'EXIT' to leave): ");
+
+
+        System.out.println(YELLOW + "+" + "-".repeat(CHAT_WIDTH) + "+" + RESET);
     }
 
-    private static void sendMessageToServer(String chatId, String username, String message) {
-        try {
-            URL url = new URL(API_BASE_URL + "/message?chatId=" + URLEncoder.encode(chatId, "UTF-8") +
-                    "&username=" + URLEncoder.encode(username, "UTF-8") +
-                    "&message=" + URLEncoder.encode(message, "UTF-8"));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.getInputStream().close();
-        } catch (Exception e) {
-            System.out.println(RED + "Error sending message: " + e.getMessage() + RESET);
-        }
-    }
+    private static List<String> wordWrap(String text, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        String[] words = text.split("\\s+");
+        StringBuilder currentLine = new StringBuilder();
 
-    private static List<String> fetchMessages(String chatId, String username) {
-        List<String> messages = new ArrayList<>();
-        try {
-            URL url = new URL(API_BASE_URL + "/messages?chatId=" + URLEncoder.encode(chatId, "UTF-8") +
-                    "&username=" + URLEncoder.encode(username, "UTF-8"));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                messages.add(line);
+        for (String word : words) {
+            if (currentLine.length() + word.length() + 1 > maxWidth) {
+                lines.add(currentLine.toString());
+                currentLine = new StringBuilder(word);
+            } else {
+                if (currentLine.length() > 0) {
+                    currentLine.append(" ");
+                }
+                currentLine.append(word);
             }
-        } catch (Exception e) {
-            System.out.println(RED + "Error fetching messages: " + e.getMessage() + RESET);
         }
-        return messages;
+
+        if (currentLine.length() > 0) {
+            lines.add(currentLine.toString());
+        }
+
+        return lines;
     }
 
     private static void clearConsole() {
-        try {
-            final String os = System.getProperty("os.name");
-            if (os.contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                Runtime.getRuntime().exec("clear");
-            }
-        } catch (Exception e) {
-            // If we can't clear the console, just print a bunch of newlines
-            for (int i = 0; i < 50; i++) {
-                System.out.println();
-            }
-        }
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
     }
 
     private static void closeChat(Scanner scanner) {
         System.out.print("Enter chat ID: ");
         String chatId = scanner.nextLine();
-
+        out.println("CLOSE_CHAT:" + chatId);
         try {
-            URL url = new URL(API_BASE_URL + "/close?chatId=" + URLEncoder.encode(chatId, "UTF-8"));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String response = reader.readLine();
+            String response = in.readLine();
             System.out.println(GREEN + response + RESET);
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println(RED + "Error closing chat: " + e.getMessage() + RESET);
         }
     }
 
-    private static void checkChatStatus(Scanner scanner) {
-        System.out.print("Enter your username: ");
-        String username = scanner.nextLine();
-
+    private static void closeSocket() {
         try {
-            URL url = new URL(API_BASE_URL + "/status?username=" + URLEncoder.encode(username, "UTF-8"));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String response = reader.readLine();
-            System.out.println(GREEN + response + RESET);
-        } catch (Exception e) {
-            System.out.println(RED + "Error checking chat status: " + e.getMessage() + RESET);
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+                System.out.println(GREEN + "Socket connection closed." + RESET);
+            }
+        } catch (IOException e) {
+            System.out.println(RED + "Error closing socket: " + e.getMessage() + RESET);
         }
     }
-    
+
+    // private static void checkChatStatus(Scanner scanner) {
+    //     System.out.print("Enter your username: ");
+    //     String username = scanner.nextLine();
+    //     out.println("CHECK_STATUS:" + username);
+    //     try {
+    //         String response = in.readLine();
+    //         System.out.println(GREEN + response + RESET);
+    //     } catch (IOException e) {
+    //         System.out.println(RED + "Error checking chat status: " + e.getMessage() + RESET);
+    //     }
+    // }
+
     private static void joinChatAsManager(Scanner scanner) {
         System.out.print("Enter your username: ");
         String username = scanner.nextLine();
         System.out.print("Enter chat ID to join: ");
         String chatId = scanner.nextLine();
-
+        out.println("JOIN_AS_MANAGER:" + username + ":" + chatId);
         try {
-            URL url = new URL(API_BASE_URL + "/chat/join-as-manager?username=" + URLEncoder.encode(username, "UTF-8") +
-                    "&chatId=" + URLEncoder.encode(chatId, "UTF-8"));
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String response = reader.readLine();
+            String response = in.readLine();
             System.out.println(GREEN + response + RESET);
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println(RED + "Error joining chat as manager: " + e.getMessage() + RESET);
         }
     }
 
     private static void viewActiveChats() {
+        out.println("VIEW_ACTIVE_CHATS");
         try {
-            URL url = new URL(API_BASE_URL + "/chat/active");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String response;
             System.out.println(GREEN + "Active Chats:" + RESET);
-            while ((response = reader.readLine()) != null) {
+            String response;
+            while (!(response = in.readLine()).equals("END_OF_ACTIVE_CHATS")) {
                 System.out.println(response);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println(RED + "Error viewing active chats: " + e.getMessage() + RESET);
+        }
+    }
+
+    private static void closeConnection() {
+        try {
+            if (socket != null && !socket.isClosed()) {
+                System.out.println("Closing connection...");
+                socket.close();
+            }
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
+        } catch (IOException e) {
+            System.out.println(RED + "Error closing connection: " + e.getMessage() + RESET);
         }
     }
 

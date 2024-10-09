@@ -1,2 +1,6 @@
 server:
   port: 3333
+
+socket:
+  server:
+    port: 3334
