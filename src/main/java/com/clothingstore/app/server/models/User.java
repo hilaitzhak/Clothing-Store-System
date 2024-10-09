@@ -16,8 +16,7 @@ public class User {
     private UserRole role;
     private String branchId;
 
-     // Default constructor
-     public User() {
+    public User() {
     }
 
     public User(String id, String name, String password) {

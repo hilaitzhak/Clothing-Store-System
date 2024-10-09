@@ -34,18 +34,6 @@ public class UserService {
         users = objectMapper.readValue(file, new TypeReference<List<User>>() {});
     }
 
-    // Get all users with a specific branch
-    // public List<User> getUsersByBranchId(String branchId) {
-    //     List<User> relevantUsers = new ArrayList<>();
-    //     for (User user : users) {
-    //         System.out.println("User: " + user);  // Print each user to verify their details
-    //         if (user.getBranchId().equalsIgnoreCase(branchId)) {
-    //             relevantUsers.add(user);
-    //         }
-    //     }
-    //     return relevantUsers;
-    // }
-    
 
     public List<User> getUsersByBranchId(String branchId) {
     return users.stream()

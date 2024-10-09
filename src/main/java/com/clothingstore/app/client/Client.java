@@ -23,10 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.clothingstore.app.server.models.Customer;
 import com.clothingstore.app.server.models.Product;
 import com.clothingstore.app.server.models.User;
-// import com.clothingstore.app.server.chat.ChatServer;
 
 public class Client {
-    // ANSI escape codes for colors
     private static final String RESET = "\033[0m";
     private static final String GREEN = "\033[0;32m";
     private static final String RED = "\033[0;31m";
@@ -112,7 +110,6 @@ public class Client {
     
                 // Check if login was successful
                 if (response.toString().contains("Login successful")) {
-                    // Now retrieve the user's full name and role from users.json
                     return fetchUserDetails(username);
                 } else {
                     System.out.println(RED + "Login failed. Invalid username or password." + RESET);
@@ -181,11 +178,9 @@ public class Client {
                 }
                 responseScanner.close();
 
-                // Parse the JSON response into a List of Customer objects
                 ObjectMapper objectMapper = new ObjectMapper();
                 List<User> employees = objectMapper.readValue(response.toString(), new TypeReference<List<User>>() {});
 
-                // Display customer details in a table format
                 printEmployeesTable(employees);
 
             } else {
@@ -198,12 +193,10 @@ public class Client {
     }
 
     private static void printEmployeesTable(List<User> employees) {
-        // Print table headers
         System.out.printf(CYAN + "%-15s %-20s %-15s %-20s %-15s %-10s %-25s\n" + RESET, 
                         "Employee ID", "Full Name", "Account Number", "Employee Number", "Role", "BranchId", "PhoneNumber");
         System.out.println(CYAN + "------------------------------------------------------------------------------------------------------" + RESET);
 
-        // Print each customer in a row
         for (User employee : employees) {
             System.out.printf("%-15s %-20s %-15s %-20s %-15s %-10s %-25s\n", 
             employee.getUserId(), 
@@ -231,11 +224,9 @@ public class Client {
                 }
                 responseScanner.close();
 
-                // Parse the JSON response into a List of Customer objects
                 ObjectMapper objectMapper = new ObjectMapper();
                 List<Customer> customers = objectMapper.readValue(response.toString(), new TypeReference<List<Customer>>() {});
 
-                // Display customer details in a table format
                 printCustomerTable(customers);
 
             } else {
@@ -248,12 +239,10 @@ public class Client {
     }
 
     private static void printCustomerTable(List<Customer> customers) {
-        // Print table headers
         System.out.printf(CYAN + "%-15s %-25s %-15s %-15s %-15s\n" + RESET, 
                         "Customer ID", "Full Name", "Postal Code", "Phone Number", "Customer Type");
         System.out.println(CYAN + "------------------------------------------------------------------------------------------" + RESET);
 
-        // Print each customer in a row
         for (Customer customer : customers) {
             System.out.printf("%-15s %-25s %-15s %-15s %-15s\n", 
                             customer.getCustomerId(), 
@@ -282,13 +271,10 @@ public class Client {
                 }
                 responseScanner.close();
 
-                // Parse the JSON response into a List of Product objects
                 ObjectMapper objectMapper = new ObjectMapper();
                 List<Product> products = objectMapper.readValue(response.toString(), new TypeReference<List<Product>>() {});
-                // Display product details in a table format
                 printProductTable(products);
 
-                // Now allow user to buy or sell products
                 boolean done = false;
                 while (!done) {
                     System.out.println(CYAN + "What would you like to do?" + RESET);
@@ -306,7 +292,7 @@ public class Client {
                             sellProduct(scanner);
                             break;
                         case 3:
-                            done = true; // Go back to the main menu
+                            done = true;
                             break;
                         default:
                             System.out.println(RED + "Invalid choice. Please try again." + RESET);
@@ -323,12 +309,10 @@ public class Client {
     }
 
     private static void printProductTable(List<Product> products) {
-        // Print table headers
         System.out.printf(CYAN + "%-20s %-20s %-20s %-20s\n" + RESET,
                 "Product ID", "Product Name", "Stock Quantity", "Price");
         System.out.println(CYAN + "----------------------------------------------------" + RESET);
 
-        // Print each product in a row
         for (Product product : products) {
             System.out.printf("%-20s %-20s %-20d $%.5f\n",
                     product.getProductId(),
@@ -347,13 +331,12 @@ public class Client {
         Map<String, Object> customerDetails = fetchCustomerDetails(customerId);
         if (customerDetails == null) {
             System.out.println(RED + "Customer not found. Cannot proceed with purchase." + RESET);
-            return; // Stop the purchase process if the customer is not found
+            return;
         }
     
         // Extract and display customer information from the Map
         String fullName = (String) customerDetails.get("fullName");
         double salePercentage = (double) customerDetails.get("salePercentage");
-        // int points = (int) customerDetails.get("points");
     
         System.out.println(CYAN + fullName + " has a " + salePercentage + "% discount " + RESET);
     
@@ -396,13 +379,12 @@ public class Client {
         Map<String, Object> customerDetails = fetchCustomerDetails(customerId);
         if (customerDetails == null) {
             System.out.println(RED + "Customer not found. Cannot proceed with selling." + RESET);
-            return; // Stop the sale process if the customer is not found
+            return;
         }
     
         // Extract and display customer information
         String fullName = (String) customerDetails.get("fullName");
         double salePercentage = (double) customerDetails.get("salePercentage");
-        // int points = (int) customerDetails.get("points");
     
         System.out.println(CYAN + "To " + fullName + " has " + salePercentage + "% sale and " + RESET);
     
@@ -438,13 +420,11 @@ public class Client {
     
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Parse the response as a Map<String, Object>
                 @SuppressWarnings("resource")
                 String response = new BufferedReader(new InputStreamReader(connection.getInputStream()))
                         .lines().collect(Collectors.joining("\n"));
     
                 ObjectMapper objectMapper = new ObjectMapper();
-                // Deserialize JSON response into a Map<String, Object>
                 return objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {});
             } else {
                 System.out.println(RED + "Failed to fetch customer details. Server returned error code: " + responseCode + RESET);
@@ -461,7 +441,6 @@ public class Client {
     private static final String CHAT_SERVER_ADDRESS = "localhost";
     private static final int CHAT_SERVER_PORT = 3334;
     private static final int CHAT_WIDTH = 80;
-    // private static final int POLLING_INTERVAL = 1000; // 1 second
 
     private static void handleChatSystem(Scanner scanner) {
         try {
@@ -510,9 +489,8 @@ public class Client {
         System.out.println("1. Request Chat");
         System.out.println("2. Join Chat");
         System.out.println("3. Send Message");
-        System.out.println("4. Close Chat");
-        System.out.println("5. Join Chat as Shift Manager");
-        System.out.println("6. View Active Chats");
+        System.out.println("4. Join Chat as Shift Manager");
+        System.out.println("5. View Active Chats");
         System.out.println("0. Back to Main Menu");
         System.out.print("Enter your choice: ");
     }
@@ -560,61 +538,6 @@ public class Client {
         }
     }
 
-    // private static void sendMessage(Scanner scanner) {
-    //     System.out.print("Enter your username: ");
-    //     currentUser = scanner.nextLine().trim();
-    //     System.out.print("Enter chat ID: ");
-    //     String chatId = scanner.nextLine().trim();
-
-    //     // Check if username or chatId is empty
-    //     if (currentUser.isEmpty() || chatId.isEmpty()) {
-    //         System.out.println(RED + "Username and chat ID cannot be empty." + RESET);
-    //         return;
-    //     }
-
-    //     out.println("ENTER_CHAT:" + chatId + ":" + currentUser);
-    //     try {
-    //         String response = in.readLine();
-    //         if (response != null && response.equals("CHAT_ENTERED")) {
-    //             System.out.println(GREEN + "Entered chat. Type 'EXIT' to leave." + RESET);
-    //             Thread receiverThread = new Thread(new MessageReceiver());
-    //             receiverThread.start();
-
-    //             String message;
-    //             while (true) {
-    //                 displayChatWindow();
-    //                 System.out.print("Enter message (or 'EXIT' to leave): ");
-    //                 message = scanner.nextLine().trim(); // Trim whitespace from message
-    //                 if (message.equalsIgnoreCase("EXIT")) {
-    //                     break;
-    //                 }
-
-    //                 // Check if message is empty
-    //                 if (message.isEmpty()) {
-    //                     System.out.println(RED + "Message cannot be empty." + RESET);
-    //                     continue; // Skip sending if message is empty
-    //                 }
-
-    //                 String timestamp = getCurrentTimeInTimezone();
-    //                 out.println("SEND_MESSAGE:" + chatId + ":" + currentUser + ":" + message + ":" + timestamp);
-    //             }
-    //             out.println("LEAVE_CHAT:" + chatId + ":" + currentUser);
-    //             System.out.println(GREEN + "You have left the chat." + RESET);
-    //             receiverThread.interrupt(); // Stop the message receiver thread
-    //             try {
-    //                 receiverThread.join(); // Wait for the receiver thread to finish
-    //             } catch (InterruptedException e) {
-    //                 System.out.println(RED + "Error waiting for message receiver to finish: " + e.getMessage() + RESET);
-    //             }
-    //         } else {
-    //             System.out.println(RED + "Failed to enter chat: "
-    //                     + (response != null ? response : "No response from server") + RESET);
-    //         }
-    //     } catch (IOException e) {
-    //         System.out.println(RED + "Error in chat: " + e.getMessage() + RESET);
-    //     }
-    // }
-
     private static void sendMessage(Scanner scanner) {
         System.out.print("Enter your username: ");
         currentUser = scanner.nextLine();
@@ -652,7 +575,7 @@ public class Client {
 
                 // Wait for the receiver thread to finish after leaving the chat
                 try {
-                    receiverThread.join(); // Wait for the receiver thread to finish
+                    receiverThread.join();
                 } catch (InterruptedException e) {
                     System.out.println(RED + "Error waiting for message receiver to finish: " + e.getMessage() + RESET);
                 }
@@ -668,31 +591,6 @@ public class Client {
         return now.format(formatter);
     }
 
-    // private static class MessageReceiver implements Runnable {
-    //     @Override
-    //     public void run() {
-    //         try {
-    //             String message;
-    //             while (!Thread.currentThread().isInterrupted()) {
-    //                 message = in.readLine();
-    //                 if (message == null) {
-    //                     System.out.println(RED + "Chat server closed the connection." + RESET);
-    //                     break;
-    //                 }
-    //                 if (message.equals("CHAT_CLOSED")) {
-    //                     System.out.println(RED + "Chat has been closed." + RESET);
-    //                     break;
-    //                 }
-    //                 chatMessages.add(message);
-    //                 displayChatWindow();
-    //             }
-    //         } catch (IOException e) {
-    //             if (!Thread.currentThread().isInterrupted()) {
-    //                 System.out.println(RED + "Error receiving messages: " + e.getMessage() + RESET);
-    //             }
-    //         }
-    //     }
-    // }
     private static class MessageReceiver implements Runnable {
         @Override
         public void run() {
@@ -794,28 +692,6 @@ public class Client {
         }
     }
 
-    private static void closeSocket() {
-        try {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-                System.out.println(GREEN + "Socket connection closed." + RESET);
-            }
-        } catch (IOException e) {
-            System.out.println(RED + "Error closing socket: " + e.getMessage() + RESET);
-        }
-    }
-
-    // private static void checkChatStatus(Scanner scanner) {
-    //     System.out.print("Enter your username: ");
-    //     String username = scanner.nextLine();
-    //     out.println("CHECK_STATUS:" + username);
-    //     try {
-    //         String response = in.readLine();
-    //         System.out.println(GREEN + response + RESET);
-    //     } catch (IOException e) {
-    //         System.out.println(RED + "Error checking chat status: " + e.getMessage() + RESET);
-    //     }
-    // }
 
     private static void joinChatAsManager(Scanner scanner) {
         System.out.print("Enter your username: ");
@@ -876,16 +752,10 @@ public class Client {
                     handleCustomerManagement(scanner);
                     break;
                 case 3:
-                    // Implement sales reports
-                    break;
-                case 4:
                     handleEmployeesManagement(scanner);
                     break;
-                case 5:
+                case 4:
                     handleChatSystem(scanner);
-                    break;
-                case 6:
-                    // Implement system logs
                     break;
                 case 0:
                     running = false;
@@ -906,10 +776,8 @@ public class Client {
         System.out.println(BLUE + "---------------------------" + RESET);
         System.out.println("1. Manage Products");
         System.out.println("2. Manage Customers");
-        System.out.println("3. Sales Reports");
-        System.out.println("4. Manage Employees");
-        System.out.println("5. Chat System");
-        System.out.println("6. System Logs");
+        System.out.println("3. Manage Employees");
+        System.out.println("4. Chat System");
         System.out.println("0. Exit");
         System.out.print("Select an option: ");
     }

@@ -62,7 +62,7 @@ public class ChatService {
 
         Chat chat = activeChats.get(chatId);
         if (chat == null) {
-            return false; // Chat not found
+            return false;
         }
 
         chat.setManagerUsername(managerUsername);
@@ -84,27 +84,6 @@ public class ChatService {
                 .orElse(null);
     }
 
-    // Broadcast a message to all participants in the chat
-    // private void broadcastMessage(Chat chat, String message) {
-    //     PrintWriter initiatorWriter = clientWriters.get(chat.getInitiatorUsername());
-    //     PrintWriter recipientWriter = clientWriters.get(chat.getRecipientUsername());
-    //     PrintWriter managerWriter = clientWriters.get(chat.getManagerUsername());
-
-    //     // Broadcast message to initiator
-    //     if (initiatorWriter != null) {
-    //         initiatorWriter.println(message);
-    //     }
-
-    //     // Broadcast message to recipient
-    //     if (recipientWriter != null) {
-    //         recipientWriter.println(message);
-    //     }
-
-    //     // Broadcast message to manager if not null
-    //     if (managerWriter != null) {
-    //         managerWriter.println(message);
-    //     }
-    // }
     public void addMessage(String chatId, String username, String message, String timestamp) {
         Chat chat = activeChats.get(chatId);
         if (chat == null) {
@@ -176,17 +155,4 @@ public class ChatService {
             throw new IllegalArgumentException("Username cannot be null");
         }
     }
-
-    // Adds a message to a chat and broadcasts it to all participants
-    // public void addMessage(String chatId, String username, String message) {
-    //     Chat chat = activeChats.get(chatId);
-    //     if (chat == null) {
-    //         throw new IllegalArgumentException("Chat not found");
-    //     }
-    //     String fullMessage = username + ": " + message;
-    //     chat.addMessage(fullMessage);
-
-    //     // Broadcast message to all participants
-    //     broadcastMessage(chat, fullMessage);
-    // }
 }

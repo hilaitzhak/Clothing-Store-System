@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
-    property = "customerType" // Or another field that determines the type
+    property = "customerType"
 )
 @JsonSubTypes({
     @JsonSubTypes.Type(value = NewCustomer.class, name = "NEW"),
@@ -38,7 +38,6 @@ public abstract class Customer {
         this.customerType = customerType;
     }
 
-    // Getters and Setters
     public String getCustomerId() {
         return customerId;
     }
@@ -75,16 +74,6 @@ public abstract class Customer {
         this.customerType = customerType;
     }
 
-
-        // public double getDiscountPercentage() {
-        //     return discountPercentage;
-        // }
-
-        // public void setDiscountPercentage(double discountPercentage) {
-        //     this.discountPercentage = discountPercentage;
-        // }
-        // Abstract method to be implemented by subclasses
-        // public abstract double convertPointsToCurrency();
         
-        public abstract double getDiscountPercentage();
+    public abstract double getDiscountPercentage();
     }

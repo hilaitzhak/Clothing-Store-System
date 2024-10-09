@@ -209,8 +209,6 @@ public class SocketServer {
         }
 
         private void handleLeaveChat(String chatId, String username) {
-            // Here you might want to remove the client from the chat room
-            // For now, we'll just send a confirmation
             out.println("Left chat: " + chatId);
         }
 

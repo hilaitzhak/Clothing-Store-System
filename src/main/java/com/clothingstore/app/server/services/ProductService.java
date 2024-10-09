@@ -73,23 +73,13 @@ public class ProductService {
 
         if (optionalProduct.isPresent() && optionalCustomer.isPresent()) {
             Product product = optionalProduct.get();
-            Customer customer = optionalCustomer.get();
             
-            // Calculate the final price after applying discount based on customer type
-            double discountPercentage = customer.getDiscountPercentage();
-            double priceAfterDiscount = product.getPrice() * (1 - discountPercentage);
-            double totalPrice = priceAfterDiscount * quantity;
-
             // Check if the stock is enough for the purchase
             if (product.getStockQuantity() >= quantity) {
                 // Deduct the stock
                 product.setStockQuantity(product.getStockQuantity() - quantity);
 
-                // Update customer points based on their purchase
-                // customer.addPoints((int) totalPrice); // Assumes points are accumulated based on the total price
-                
                 saveProducts();
-                // customerService.saveCustomer(); // Save updated customer data
             } else {
                 throw new IllegalArgumentException("Not enough stock. Only " + product.getStockQuantity() + " items available.");
             }
@@ -106,16 +96,11 @@ public class ProductService {
 
         if (optionalProduct.isPresent() && optionalCustomer.isPresent()) {
             Product product = optionalProduct.get();
-            Customer customer = optionalCustomer.get();
 
             // Increase stock
             product.setStockQuantity(product.getStockQuantity() + quantity);
 
-            // Assume points might be deducted during selling, or some other customer-specific logic could be applied
-            // customer.deductPoints(quantity * 10); // Example: Deduct 10 points per sold unit
-
             saveProducts();
-            // customerService.saveCustomer(); // Save updated customer data
         } else {
             throw new IllegalArgumentException("Product or Customer not found.");
         }

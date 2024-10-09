@@ -1,7 +1,5 @@
 package com.clothingstore.app.server.models;
 
-// import org.springframework.beans.factory.annotation.Autowired;
-
 import com.clothingstore.app.server.models.Enums.CustomerType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -10,10 +8,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReturningCustomer extends Customer {
 
-    // private static final int POINTS_CONVERSION_RATE = 5; // 5 shekels for 100 points
     public ReturningCustomer() {
         super();
-        // setDiscountPercentage(0.2);
     }
     @JsonCreator
     public ReturningCustomer(
@@ -28,9 +24,4 @@ public class ReturningCustomer extends Customer {
     public double getDiscountPercentage() {
         return 0.2;
     }
-
-    // @Override
-    // public double convertPointsToCurrency() {
-    //     return getPoints() / 100 * POINTS_CONVERSION_RATE;
-    // }
 }

@@ -29,19 +29,7 @@ public class CustomerService {
         } catch (IOException e) {
             throw new RuntimeException("Error loading customers from JSON file", e);
         }
-        // Clear existing customers list if necessary
-        // customers.clear();
     }
-
-
-    // public List<Customer> getAllCustomers() {
-    //     return customers;
-    // }
-
-    // public Optional<Customer> getCustomerById(String customerId) {
-        
-    //     return customers.stream().filter(c -> c.getCustomerId().equalsIgnoreCase(customerId)).findFirst();
-    // }
 
 
     public Optional<Customer> getCustomerById(String customerId) {
@@ -84,15 +72,4 @@ public class CustomerService {
             throw new RuntimeException("Customer not found.");
         }
     }
-
-    // public void saveCustomer(Customer customer) {
-    //     try {
-    //         List<Customer> customers = getAllCustomers();
-            
-    //         ObjectMapper objectMapper = new ObjectMapper();
-    //         objectMapper.writeValue(new File(CUSTOMERS_FILE), customers);
-    //     } catch (Exception e) {
-    //         e.printStackTrace();
-    //     }
-    // }
 }
